@@ -1,15 +1,19 @@
 import javadraw.*;
 
 import java.util.EmptyStackException;
+import java.util.NoSuchElementException;
 import java.util.Stack;
 
 public class Main extends Window {
     private static final double POINT_SIZE = 5;
 
-    int lastPoint = 0;
     PointShape pointShape = PointShape.SQUARE;
     Text shapeLabel;
+    Text lineLabel;
     Stack<Renderable> points = new Stack<>();
+    Stack<Line> lines = new Stack<>();
+    Stack<LastType> lastType = new Stack<>();
+    boolean lineModeEnabled = false;
 
     public static void main(String[] args) {
         Window window = new Window();
@@ -19,6 +23,7 @@ public class Main extends Window {
     @Override
     public void start() {
         shapeLabel = new TextHelper(screen, "Current Shape: " + pointShape.toString(), new Location(10, 10)).create();
+        lineLabel = new TextHelper(screen, "Line Mode: " + lineModeEnabled, new Location(10, 25)).create();
     }
 
     @Override
@@ -26,22 +31,37 @@ public class Main extends Window {
         print(location, button); //debug
         switch (button) {
             case 1 -> {
+                Renderable point = null;
+                Renderable lastPoint = null;
+                try {
+                    lastPoint = points.lastElement();
+                } catch (NoSuchElementException e) {
+                    //ignore
+                }
                 switch (pointShape) {
                     case SQUARE -> {
-                        Rectangle rectangle = new Rectangle(screen, location, POINT_SIZE, POINT_SIZE);
-                        rectangle.center(location);
-                        points.add(rectangle);
+                        point = new Rectangle(screen, location, POINT_SIZE, POINT_SIZE);
+                        point.center(location);
+                        points.add(point);
+                        lastType.add(LastType.POINT);
                     }
                     case CIRCLE -> {
-                        Oval oval = new Oval(screen, location, POINT_SIZE, POINT_SIZE);
-                        oval.center(location);
-                        points.add(oval);
+                        point = new Oval(screen, location, POINT_SIZE, POINT_SIZE);
+                        point.center(location);
+                        points.add(point);
+                        lastType.add(LastType.POINT);
                     }
                     case TRIANGLE -> {
-                        Triangle triangle = new Triangle(screen, location, POINT_SIZE, POINT_SIZE);
-                        triangle.center(location);
-                        points.add(triangle);
+                        point = new Triangle(screen, location, POINT_SIZE, POINT_SIZE);
+                        point.center(location);
+                        points.add(point);
+                        lastType.add(LastType.POINT);
                     }
+                }
+                if (lineModeEnabled) {
+                    Line line = new Line(screen, point.center(), lastPoint.center());
+                    lines.add(line);
+                    lastType.add(LastType.LINE);
                 }
             }
             case 2 -> {
@@ -51,7 +71,10 @@ public class Main extends Window {
             }
             case 3 -> {
                 try {
-                    points.pop().remove();
+                    switch (lastType.pop()) {
+                        case POINT -> points.pop().remove();
+                        case LINE -> lines.pop().remove();
+                    }
                 } catch (EmptyStackException e) {
                     //ignore
                 }
@@ -65,7 +88,18 @@ public class Main extends Window {
             case "E" -> {
                 points.forEach((p) -> p.remove());
                 points.empty();
+                lastType.removeIf((lt) -> lt.equals(LastType.POINT));
+                System.out.println(lastType);
             }
+            case "L" -> lineModeEnabled = !lineModeEnabled;
+            case "C" -> {
+                lines.forEach((l) -> l.remove());
+                lines.empty();
+                lastType.removeIf((lt) -> lt.equals(LastType.LINE));
+            }
+            case "1" -> System.out.println(points);
+            case "2" -> System.out.println(lines);
+            case "3" -> System.out.println(lastType);
         }
     }
 
@@ -94,5 +128,9 @@ public class Main extends Window {
 
     public enum PointShape {
         SQUARE, CIRCLE, TRIANGLE
+    }
+
+    public enum LastType {
+        POINT, LINE
     }
 }
