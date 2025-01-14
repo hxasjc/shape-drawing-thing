@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/Downloads/javaDraw.jar!/" />
+          <root url="jar://$MODULE_DIR$/../javadraw/out/artifacts/javadraw_jar/javadraw.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
